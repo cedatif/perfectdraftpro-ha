@@ -1,0 +1,13 @@
+{
+  "domain": "perfectdraft_pro",
+  "name": "PerfectDraft Pro",
+  "version": "0.1.0",
+  "config_flow": true,
+  "documentation": "https://github.com/ton-username/perfectdraft-ha",
+  "issue_tracker": "https://github.com/ton-username/perfectdraft-ha/issues",
+  "dependencies": [],
+  "codeowners": ["@ton-username"],
+  "requirements": [],
+  "iot_class": "cloud_polling",
+  "integration_type": "device"
+}

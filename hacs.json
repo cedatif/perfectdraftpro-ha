@@ -1,0 +1,7 @@
+{
+  "name": "PerfectDraft Pro",
+  "content_in_root": false,
+  "render_readme": true,
+  "filename": "perfectdraft_pro.zip",
+  "homeassistant": "2024.1.0"
+}

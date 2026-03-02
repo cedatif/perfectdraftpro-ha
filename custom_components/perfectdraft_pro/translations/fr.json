@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurer PerfectDraft Pro",
+        "description": "Entrez les identifiants de votre compte PerfectDraft.",
+        "data": {
+          "email": "Adresse email",
+          "password": "Mot de passe"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Email ou mot de passe incorrect",
+      "cannot_connect": "Impossible de se connecter à l'API PerfectDraft",
+      "no_machine": "Aucune tireuse trouvée sur ce compte",
+      "unknown": "Erreur inattendue"
+    },
+    "abort": {
+      "already_configured": "Ce compte est déjà configuré"
+    }
+  }
+}
