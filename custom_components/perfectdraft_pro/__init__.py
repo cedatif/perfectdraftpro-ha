@@ -14,8 +14,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_EMAIL,
-    CONF_PASSWORD,
     DOMAIN,
     STORE_ACCESS_TOKEN,
     STORE_DEVICE_UUID,
@@ -35,35 +33,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PerfectDraft Pro from a config entry."""
     client = PerfectDraftClient(async_get_clientsession(hass))
 
-    email = entry.data[CONF_EMAIL]
-    password = entry.data[CONF_PASSWORD]
+    stored_expiry = entry.data.get(STORE_TOKEN_EXPIRY, 0.0)
+    if stored_expiry <= 0:
+        stored_expiry = time.time() + 3540
 
-    if entry.data.get(STORE_ACCESS_TOKEN):
-        # Restaurer la session existante depuis HA
-        stored_expiry = entry.data.get(STORE_TOKEN_EXPIRY, 0.0)
-        # Si token_expiry est 0 (mode tokens sans expiry connue), on suppose ~59 min
-        if stored_expiry <= 0:
-            stored_expiry = time.time() + 3540
-        client.restore_session(
-            email=email,
-            password=password,
-            access_token=entry.data[STORE_ACCESS_TOKEN],
-            refresh_token=entry.data[STORE_REFRESH_TOKEN],
-            token_expiry=stored_expiry,
-        )
-    else:
-        # Première connexion → auth Cognito complète
-        try:
-            await client.authenticate(email, password)
-            me = await client.get_me()
-            machine = _first_machine(me)
-            if not machine:
-                _LOGGER.error("Aucune tireuse trouvée sur ce compte")
-                return False
-            _persist_session(hass, entry, client, machine["id"], machine["deviceId"])
-        except PerfectDraftAuthError as err:
-            _LOGGER.error("Authentification impossible : %s", err)
-            return False
+    client.restore_session(
+        access_token=entry.data[STORE_ACCESS_TOKEN],
+        refresh_token=entry.data[STORE_REFRESH_TOKEN],
+        token_expiry=stored_expiry,
+        machine_id=entry.data.get(STORE_MACHINE_ID),
+    )
 
     machine_id = entry.data[STORE_MACHINE_ID]
     device_uuid = entry.data[STORE_DEVICE_UUID]
@@ -181,32 +160,6 @@ async def _build_state(
         "loyalty_points": rewards_data.get("availablePoints"),
         "tier": tier_data.get("band"),
     }
-
-
-def _first_machine(me: dict) -> dict | None:
-    machines = me.get("perfectdraftMachines", [])
-    return machines[0] if machines else None
-
-
-def _persist_session(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    client: PerfectDraftClient,
-    machine_id: int,
-    device_uuid: str,
-) -> None:
-    """Sauvegarder session + machine dans l'entrée de config."""
-    hass.config_entries.async_update_entry(
-        entry,
-        data={
-            **entry.data,
-            STORE_ACCESS_TOKEN: client.access_token,
-            STORE_REFRESH_TOKEN: client.refresh_token,
-            STORE_TOKEN_EXPIRY: client.token_expiry,
-            STORE_MACHINE_ID: machine_id,
-            STORE_DEVICE_UUID: device_uuid,
-        },
-    )
 
 
 def _persist_tokens(
