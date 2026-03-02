@@ -37,6 +37,11 @@ BINARY_SENSORS: tuple[PerfectDraftBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         icon="mdi:cloud-check",
     ),
+    PerfectDraftBinarySensorDescription(
+        key="eco_mode",
+        name="Mode éco",
+        icon="mdi:leaf",
+    ),
 )
 
 

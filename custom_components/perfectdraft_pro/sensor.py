@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfTemperature, UnitOfVolume
+from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfTemperature, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,12 +36,12 @@ SENSORS: tuple[PerfectDraftSensorDescription, ...] = (
         icon="mdi:thermometer",
     ),
     PerfectDraftSensorDescription(
-        key="target_temperature",
-        name="Température cible",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
+        key="time_to_temp",
+        name="Temps de refroidissement",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer-chevron-up",
+        icon="mdi:timer-sand",
     ),
     PerfectDraftSensorDescription(
         key="keg_volume",
@@ -103,6 +103,11 @@ SENSORS: tuple[PerfectDraftSensorDescription, ...] = (
         icon="mdi:calendar-clock",
     ),
     PerfectDraftSensorDescription(
+        key="keg_type",
+        name="Type de fût",
+        icon="mdi:barrel",
+    ),
+    PerfectDraftSensorDescription(
         key="mode",
         name="Mode de fonctionnement",
         icon="mdi:cog-outline",
@@ -148,12 +153,14 @@ class PerfectDraftSensor(CoordinatorEntity[PerfectDraftCoordinator], SensorEntit
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.entry.entry_id}_{description.key}"
+        data = coordinator.data or {}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.entry.entry_id)},
             name="PerfectDraft Pro",
             manufacturer="AB InBev",
             model="PerfectDraft Pro",
-            sw_version=coordinator.data.get("firmware_version") if coordinator.data else None,
+            sw_version=data.get("firmware_version"),
+            serial_number=data.get("serial_number"),
         )
 
     @property

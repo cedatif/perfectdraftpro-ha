@@ -202,6 +202,30 @@ class PerfectDraftClient:
                 return {}
             return await resp.json(content_type=None)
 
+    async def set_machine_settings(
+        self,
+        settings_id: int,
+        temperature: int | None = None,
+        boost: bool | None = None,
+    ) -> dict[str, Any]:
+        """Mettre à jour température cible et/ou mode boost."""
+        await self._ensure_token()
+        payload: dict[str, Any] = {}
+        if temperature is not None:
+            payload["temperature"] = temperature
+        if boost is not None:
+            payload["boost"] = boost
+        async with self._session.put(
+            f"{API_BASE}/api/perfectdraft_machine_settings/{settings_id}",
+            json=payload,
+            headers=self._auth_headers(),
+        ) as resp:
+            if resp.status not in (200, 204):
+                raise PerfectDraftApiError(f"Erreur set_settings: {resp.status}")
+            if resp.status == 200:
+                return await resp.json(content_type=None)
+            return {}
+
     # ------------------------------------------------------------------ #
     # Persistence des credentials (stockage HA)                            #
     # ------------------------------------------------------------------ #

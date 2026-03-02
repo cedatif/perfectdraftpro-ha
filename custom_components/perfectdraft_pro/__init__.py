@@ -26,7 +26,12 @@ from .perfectdraft_api import PerfectDraftApiError, PerfectDraftAuthError, Perfe
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -91,17 +96,16 @@ class PerfectDraftCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             # Requêtes parallèles pour minimiser la latence
-            machine, keg_data, settings, rewards = await asyncio.gather(
+            machine, keg_data, rewards = await asyncio.gather(
                 self.client.get_machine(self.machine_id),
                 self.client.get_machine_keg(self.machine_id),
-                self.client.get_machine_settings(self.device_uuid),
                 self.client.get_rewards(),
             )
 
             # Persister les tokens potentiellement renouvelés
             _persist_tokens(self.hass, self.entry, self.client)
 
-            return await _build_state(self.client, machine, keg_data, settings, rewards)
+            return await _build_state(self.client, machine, keg_data, rewards)
 
         except PerfectDraftAuthError as err:
             raise UpdateFailed(f"Erreur d'authentification : {err}") from err
@@ -119,7 +123,6 @@ async def _build_state(
     client: PerfectDraftClient,
     machine: dict,
     keg_data: dict,
-    settings: dict,
     rewards: dict,
 ) -> dict[str, Any]:
     """Assembler l'état complet depuis les réponses API."""
@@ -142,21 +145,40 @@ async def _build_state(
             except PerfectDraftApiError:
                 pass
 
+    detail_settings = details.get("settings") or {}
+    time_to_temp_ms = details.get("timeToReachTargetTemperature")
+
     return {
+        # Température
         "temperature": details.get("displayedBeerTemperatureInCelsius"),
         "target_temperature": setting.get("temperature"),
+        "temp_min": setting.get("temperatureMin", 0),
+        "temp_max": setting.get("temperatureMax", 12),
+        # Fût
         "keg_volume": details.get("kegVolume"),
         "keg_pressure": details.get("kegPressure"),
+        "keg_type": details.get("kegType"),
+        # Verres
         "last_pour_volume": details.get("volumeOfLastPour"),
         "last_pour_duration": details.get("durationOfLastPour"),
         "pours_since_startup": details.get("numberOfPoursSinceStartup"),
+        # Divers
+        "time_to_temp": round(time_to_temp_ms / 1000) if time_to_temp_ms else None,
         "error_codes": details.get("errorCodes"),
         "firmware_version": details.get("firmwareVersion"),
+        "serial_number": details.get("serialNumber"),
+        # États binaires
         "door_closed": details.get("doorClosed"),
         "connected": details.get("connectedState"),
+        "boost": setting.get("boost"),
+        "eco_mode": detail_settings.get("ecoModeEnabled"),
+        # Bière
         "beer_name": beer_name,
         "keg_inserted_at": keg_inserted_at,
-        "mode": (settings.get("current") or {}).get("mode"),
+        # Réglages
+        "mode": setting.get("mode"),
+        "settings_id": setting.get("id"),
+        # Fidélité
         "loyalty_points": rewards_data.get("availablePoints"),
         "tier": tier_data.get("band"),
     }
