@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import timedelta
 from typing import Any
 
@@ -39,12 +40,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.data.get(STORE_ACCESS_TOKEN):
         # Restaurer la session existante depuis HA
+        stored_expiry = entry.data.get(STORE_TOKEN_EXPIRY, 0.0)
+        # Si token_expiry est 0 (mode tokens sans expiry connue), on suppose ~59 min
+        if stored_expiry <= 0:
+            stored_expiry = time.time() + 3540
         client.restore_session(
             email=email,
             password=password,
             access_token=entry.data[STORE_ACCESS_TOKEN],
             refresh_token=entry.data[STORE_REFRESH_TOKEN],
-            token_expiry=entry.data.get(STORE_TOKEN_EXPIRY, 0.0),
+            token_expiry=stored_expiry,
         )
     else:
         # Première connexion → auth Cognito complète
