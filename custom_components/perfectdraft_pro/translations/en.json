@@ -3,10 +3,28 @@
     "step": {
       "user": {
         "title": "Set up PerfectDraft Pro",
+        "menu_options": {
+          "credentials": "Automatic sign-in (email + password)",
+          "tokens": "Paste tokens (via get_tokens.py script)"
+        }
+      },
+      "credentials": {
+        "title": "PerfectDraft Pro sign-in",
         "description": "Enter your PerfectDraft account credentials.",
         "data": {
           "email": "Email address",
           "password": "Password"
+        }
+      },
+      "tokens": {
+        "title": "PerfectDraft Pro tokens",
+        "description": "Paste the values printed by the `get_tokens.py` script.",
+        "data": {
+          "email": "Email address",
+          "access_token": "Access Token",
+          "refresh_token": "Refresh Token",
+          "machine_id": "Machine ID",
+          "device_uuid": "Device UUID"
         }
       }
     },

@@ -3,10 +3,28 @@
     "step": {
       "user": {
         "title": "Configurer PerfectDraft Pro",
+        "menu_options": {
+          "credentials": "Connexion automatique (email + mot de passe)",
+          "tokens": "Coller les tokens (via script get_tokens.py)"
+        }
+      },
+      "credentials": {
+        "title": "Connexion PerfectDraft Pro",
         "description": "Entrez les identifiants de votre compte PerfectDraft.",
         "data": {
           "email": "Adresse email",
           "password": "Mot de passe"
+        }
+      },
+      "tokens": {
+        "title": "Tokens PerfectDraft Pro",
+        "description": "Collez les valeurs affichées par le script `get_tokens.py`.",
+        "data": {
+          "email": "Adresse email",
+          "access_token": "Access Token",
+          "refresh_token": "Refresh Token",
+          "machine_id": "Machine ID",
+          "device_uuid": "Device UUID"
         }
       }
     },
