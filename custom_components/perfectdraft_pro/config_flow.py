@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 import aiohttp
@@ -139,7 +140,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: "",
                     STORE_ACCESS_TOKEN: user_input[STORE_ACCESS_TOKEN].strip(),
                     STORE_REFRESH_TOKEN: user_input[STORE_REFRESH_TOKEN].strip(),
-                    STORE_TOKEN_EXPIRY: 0.0,
+                    STORE_TOKEN_EXPIRY: time.time() + 3540,  # ~59 min, renouvellement automatique ensuite
                     STORE_MACHINE_ID: user_input[STORE_MACHINE_ID],
                     STORE_DEVICE_UUID: user_input[STORE_DEVICE_UUID].strip(),
                 },
